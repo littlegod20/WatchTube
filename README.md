@@ -84,6 +84,14 @@ See [.env.example](.env.example). Important fields:
 - `CLIENT_ORIGIN`, `SERVER_URL` (CORS + links)
 - `S3_*` and `CDN_PUBLIC_BASE_URL` for storage and playback URLs (configure **bucket CORS** for browser `PUT` + `GET` when not using local MinIO)
 
+## Deploying the client on Vercel
+
+1. In Vercel, set the project **Root Directory** to `client` (or ensure `client/vercel.mjs` is the deployment root).
+2. Add **`PUBLIC_API_ORIGIN`** in Vercel → Environment Variables (Production and Preview): your public Railway API URL with **no** trailing slash, e.g. `https://your-service.up.railway.app`. (`SERVER_URL` is accepted as a fallback name.)
+3. On **Railway**, set **`CLIENT_ORIGIN`** to your Vercel site origin (e.g. `https://watch-tube-client.vercel.app`) so CORS and session cookies match the browser.
+
+[`client/vercel.mjs`](client/vercel.mjs) rewrites `/api/*` and `/socket.io/*` to that origin, then falls back to `/index.html` for the SPA.
+
 ## Phase 2 (not in this repo scope)
 
 - **Google OAuth**: `User.googleId` is reserved; add `passport-google-oauth20` and link accounts like local login.

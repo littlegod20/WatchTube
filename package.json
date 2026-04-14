@@ -1,0 +1,21 @@
+{
+  "name": "watchtube",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"pnpm --filter server dev\" \"pnpm --filter client dev\"",
+    "build": "pnpm --filter shared build && pnpm --filter server build && pnpm --filter client build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm --filter server test",
+    "db:migrate": "pnpm --filter server db:migrate",
+    "db:generate": "pnpm --filter server db:generate",
+    "db:push": "pnpm --filter server db:push"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.7.3"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

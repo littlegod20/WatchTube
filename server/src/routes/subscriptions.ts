@@ -3,8 +3,10 @@ import { prisma } from "../lib/prisma.js";
 import { routeParamString } from "../lib/routeParams.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { HttpError } from "../middleware/errorHandler.js";
+import type { Server as SocketServer } from "socket.io";
 
-export const subscriptionsRouter = Router();
+export function createSubscriptionsRouter(io: SocketServer) {
+  const subscriptionsRouter = Router();
 
 subscriptionsRouter.get("/users/:channelId/subscription/me", requireAuth, async (req, res, next) => {
   try {
@@ -43,6 +45,12 @@ subscriptionsRouter.post("/users/:channelId/subscription/toggle", requireAuth, a
       });
     }
     const subscriberCount = await prisma.subscription.count({ where: { channelId } });
+    io.to(`channel:${channelId}`).emit("subscription:updated", {
+      channelId,
+      subscriberCount,
+      userId: req.user!.id,
+      subscribed: !existing,
+    });
     res.json({
       subscribed: !existing,
       subscriberCount,
@@ -51,3 +59,6 @@ subscriptionsRouter.post("/users/:channelId/subscription/toggle", requireAuth, a
     next(e);
   }
 });
+
+  return subscriptionsRouter;
+}

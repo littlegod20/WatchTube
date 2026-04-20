@@ -5,8 +5,10 @@ import { prisma } from "../lib/prisma.js";
 import { routeParamString } from "../lib/routeParams.js";
 import { requireAuth } from "../middleware/requireAuth.js";
 import { HttpError } from "../middleware/errorHandler.js";
+import type { Server as SocketServer } from "socket.io";
 
-export const likesRouter = Router();
+export function createLikesRouter(io: SocketServer) {
+  const likesRouter = Router();
 
 likesRouter.get("/videos/:videoId/likes/me", requireAuth, async (req, res, next) => {
   try {
@@ -43,12 +45,24 @@ likesRouter.post("/videos/:videoId/likes/toggle", requireAuth, async (req, res, 
         where: { userId_videoId: { userId: req.user!.id, videoId } },
       });
       const count = await prisma.like.count({ where: { videoId } });
+      io.to(`video:${videoId}`).emit("like:updated", {
+        videoId,
+        userId: req.user!.id,
+        liked: false,
+        count,
+      });
       return res.json({ liked: false, count });
     }
     await prisma.like.create({
       data: { userId: req.user!.id, videoId },
     });
     const count = await prisma.like.count({ where: { videoId } });
+    io.to(`video:${videoId}`).emit("like:updated", {
+      videoId,
+      userId: req.user!.id,
+      liked: true,
+      count,
+    });
     res.json({ liked: true, count });
   } catch (e) {
     next(e);
@@ -83,3 +97,6 @@ likesRouter.post("/likes/batch", async (req, res, next) => {
     next(e);
   }
 });
+
+  return likesRouter;
+}

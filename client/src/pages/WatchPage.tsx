@@ -31,6 +31,7 @@ export function WatchPage() {
   });
 
   const playbackUrl = videoQuery.data?.video.playbackUrl;
+
   useEffect(() => {
     setPlaybackError(null);
   }, [videoId, playbackUrl]);
@@ -59,15 +60,14 @@ export function WatchPage() {
     viewedRef.current = true;
     void apiFetch(`/api/videos/${videoId}/view`, { method: "POST", body: "{}" }).catch(() => {
       viewedRef.current = false;
+      console.error("Failed to view video");
     });
     void queryClient.invalidateQueries({ queryKey: ["video", videoId] });
   }, [videoId, videoQuery.data, queryClient]);
 
   useEffect(() => {
     if (!videoId) return;
-    const s = io(
-      import.meta.env.VITE_API_BASE_URL,
-      {
+    const s = io(import.meta.env.VITE_API_BASE_URL, {
       path: "/socket.io",
       withCredentials: true,
     });
@@ -108,13 +108,27 @@ export function WatchPage() {
         })
       );
     };
+    const onLikeUpdated = (payload: {
+      videoId: string;
+      userId: string;
+      liked: boolean;
+      count: number;
+    }) => {
+      if (payload.videoId !== videoId) return;
+      queryClient.setQueryData(["likeCount", videoId], { count: payload.count });
+      if (user?.id && payload.userId === user.id) {
+        queryClient.setQueryData(["likeMe", videoId], { liked: payload.liked });
+      }
+    };
     socket.on("comment:created", onCreated);
     socket.on("comment:deleted", onDeleted);
+    socket.on("like:updated", onLikeUpdated);
     return () => {
       socket.off("comment:created", onCreated);
       socket.off("comment:deleted", onDeleted);
+      socket.off("like:updated", onLikeUpdated);
     };
-  }, [socket, videoId, queryClient]);
+  }, [socket, videoId, queryClient, user?.id]);
 
   const postComment = useMutation({
     mutationFn: async () => {

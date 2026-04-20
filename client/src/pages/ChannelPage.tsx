@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
+import { io } from "socket.io-client";
 import { VideoThumbnail } from "@/components/VideoThumbnail";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/auth/AuthContext";
@@ -55,6 +57,39 @@ export function ChannelPage() {
       );
     },
   });
+
+  useEffect(() => {
+    if (!userId) return;
+    const socket = io(import.meta.env.VITE_API_BASE_URL, {
+      path: "/socket.io",
+      withCredentials: true,
+    });
+    const onSubscriptionUpdated = (payload: {
+      channelId: string;
+      subscriberCount: number;
+      userId: string;
+      subscribed: boolean;
+    }) => {
+      if (payload.channelId !== userId) return;
+      queryClient.setQueryData(["channel", userId], (old: { user: ChannelProfile } | undefined) =>
+        old
+          ? {
+              user: { ...old.user, subscriberCount: payload.subscriberCount },
+            }
+          : old
+      );
+      if (user?.id && payload.userId === user.id) {
+        queryClient.setQueryData(["subMe", userId], { subscribed: payload.subscribed });
+      }
+    };
+    socket.emit("join:channel", userId);
+    socket.on("subscription:updated", onSubscriptionUpdated);
+    return () => {
+      socket.emit("leave:channel", userId);
+      socket.off("subscription:updated", onSubscriptionUpdated);
+      socket.close();
+    };
+  }, [userId, queryClient, user?.id]);
 
   const ch = profileQuery.data?.user;
   const videos = videosQuery.data?.pages.flatMap((p) => p.videos) ?? [];

@@ -14,8 +14,8 @@ import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./routes/auth.js";
 import { createVideosRouter } from "./routes/videos.js";
 import { createCommentsRouter } from "./routes/comments.js";
-import { likesRouter } from "./routes/likes.js";
-import { subscriptionsRouter } from "./routes/subscriptions.js";
+import { createLikesRouter } from "./routes/likes.js";
+import { createSubscriptionsRouter } from "./routes/subscriptions.js";
 import type { Server as SocketServer } from "socket.io";
 
 export function createApp(env: Env, logger: Logger, io: SocketServer) {
@@ -74,8 +74,8 @@ export function createApp(env: Env, logger: Logger, io: SocketServer) {
   app.use("/api", authRouter);
   app.use("/api", createVideosRouter(env));
   app.use("/api", createCommentsRouter(io));
-  app.use("/api", likesRouter);
-  app.use("/api", subscriptionsRouter);
+  app.use("/api", createLikesRouter(io));
+  app.use("/api", createSubscriptionsRouter(io));
 
   app.use((req, _res, next) => {
     next(new HttpError(404, `Not found: ${req.method} ${req.originalUrl}`));

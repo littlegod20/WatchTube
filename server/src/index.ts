@@ -23,5 +23,5 @@ setupSocketIo(io, logger);
 
 const port = env.PORT;
 httpServer.listen(port, () => {
-  logger.info(`Server listening on ${env.SERVER_URL}`, { port });
+  logger.info(`Server listening on ${env.VITE_API_BASE_URL}`, { port });
 });

@@ -12,7 +12,7 @@ config({ path: path.join(serverRoot, ".env"), override: true });
 const defaults: Record<string, string> = {
   NODE_ENV: "test",
   PORT: "3000",
-  SERVER_URL: "http://localhost:3000",
+  VITE_API_BASE_URL: "http://localhost:3000",
   CLIENT_ORIGIN: "http://localhost:5173",
   DATABASE_URL: "postgresql://watchtube:watchtube@localhost:5432/watchtube",
   SESSION_SECRET: "test-session-secret-not-for-production",

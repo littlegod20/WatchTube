@@ -14,24 +14,29 @@ function loadEnvFiles() {
 
 loadEnvFiles();
 
-const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-  PORT: z.coerce.number().default(3000),
-  SERVER_URL: z.string().url(),
-  CLIENT_ORIGIN: z.string().url(),
-  DATABASE_URL: z.string().min(1),
-  SESSION_SECRET: z.string().min(16),
-  S3_REGION: z.string().min(1),
-  S3_BUCKET: z.string().min(1),
-  S3_ACCESS_KEY: z.string().min(1),
-  S3_SECRET_KEY: z.string().min(1),
-  S3_ENDPOINT: z.string().url().optional(),
-  S3_FORCE_PATH_STYLE: z
-    .string()
-    .optional()
-    .transform((v) => v === "true"),
-  CDN_PUBLIC_BASE_URL: z.string().url(),
-});
+const envSchema = z
+  .object({
+    NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+    PORT: z.coerce.number().default(3000),
+    VITE_API_BASE_URL: z.string().url().optional(),
+    CLIENT_ORIGIN: z.string().url(),
+    DATABASE_URL: z.string().min(1),
+    SESSION_SECRET: z.string().min(16),
+    S3_REGION: z.string().min(1),
+    S3_BUCKET: z.string().min(1),
+    S3_ACCESS_KEY: z.string().min(1),
+    S3_SECRET_KEY: z.string().min(1),
+    S3_ENDPOINT: z.string().url().optional(),
+    S3_FORCE_PATH_STYLE: z
+      .string()
+      .optional()
+      .transform((v) => v === "true"),
+    CDN_PUBLIC_BASE_URL: z.string().url(),
+  })
+  .refine((value) => Boolean(value.VITE_API_BASE_URL), {
+    message: "VITE_API_BASE_URL must be set",
+    path: ["VITE_API_BASE_URL"],
+  });
 
 export type Env = z.infer<typeof envSchema>;
 

@@ -65,7 +65,9 @@ export function WatchPage() {
 
   useEffect(() => {
     if (!videoId) return;
-    const s = io({
+    const s = io(
+      import.meta.env.VITE_API_BASE_URL,
+      {
       path: "/socket.io",
       withCredentials: true,
     });
